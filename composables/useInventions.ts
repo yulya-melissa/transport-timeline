@@ -44,7 +44,8 @@ interface Invention {
 
 export const useInventions = () => {
   const config = useRuntimeConfig()
-  const baseRaw = config.app?.baseURL || import.meta.env.BASE_URL || '/'
+  const baseFromConfig = config.public?.basePath || config.app?.baseURL || import.meta.env.BASE_URL || '/'
+  const baseRaw = typeof baseFromConfig === 'string' ? baseFromConfig : '/'
   const normalizedBase =
     baseRaw.replace(/\/$/, '') === '/' ? '' : baseRaw.replace(/\/$/, '')
 
