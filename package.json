@@ -15,5 +15,6 @@
     "@nuxt/image": "^1.0.0",
     "nuxt": "^3.10.0",
     "gh-pages": "^6.0.0"
-  }
+  },
+  "deploy": "npx nuxi generate && npx gh-pages -d .output/public"
 }
