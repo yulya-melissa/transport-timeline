@@ -37,6 +37,7 @@
         <div
           v-if="activeSpot && currentSpot"
           class="hotspot-tooltip"
+          :class="{ below: currentSpot && currentSpot.y < 18 }"
           :style="getTooltipPosition(currentSpot)"
           @mouseenter="activeSpot = currentSpot.id"
           @mouseleave="activeSpot = null"
@@ -73,9 +74,12 @@ const getMarkerPosition = (spot) => {
 }
 
 const getTooltipPosition = (spot) => {
+  const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
+  const x = clamp(spot.x, 10, 90)
+  const y = clamp(spot.y, 12, 96)
   return {
-    left: spot.x + '%',
-    top: (spot.y - 14) + '%'
+    left: x + '%',
+    top: spot.y < 18 ? (y + 10) + '%' : (y - 14) + '%'
   }
 }
 
@@ -93,13 +97,14 @@ const onImageLoad = () => {
   background: var(--card-bg);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .image-wrapper {
   position: relative;
   display: inline-block;
   width: 100%;
+  overflow: visible;
   cursor: default;
 }
 
@@ -123,12 +128,12 @@ const onImageLoad = () => {
   background: none;
   border: none;
   cursor: pointer;
-  z-index: 3;
+  z-index: 15;
   padding: 0;
 }
 
 .hotspot-marker.active {
-  z-index: 4;
+  z-index: 20;
 }
 
 .marker-dot {
@@ -185,10 +190,13 @@ const onImageLoad = () => {
   border: 1px solid var(--gold);
   border-radius: var(--radius-sm);
   padding: 12px 16px;
+  box-sizing: border-box;
   min-width: 220px;
-  max-width: 320px;
+  max-width: min(320px, calc(100% - 24px));
+  overflow-wrap: break-word;
+  word-break: break-word;
   box-shadow: var(--shadow-lg);
-  z-index: 10;
+  z-index: 30;
   pointer-events: auto;
   margin-top: -12px;
 }
@@ -201,6 +209,17 @@ const onImageLoad = () => {
   transform: translateX(-50%);
   border: 8px solid transparent;
   border-top-color: var(--gold);
+}
+
+.hotspot-tooltip.below {
+  transform: translate(-50%, 0);
+}
+
+.hotspot-tooltip.below::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: var(--gold);
 }
 
 .hotspot-tooltip h4 {
