@@ -1,13 +1,21 @@
-<template>
+﻿<template>
   <div class="interactive-image">
     <div class="image-wrapper" ref="imageWrapper">
-      <img
-        :src="image.src"
-        :alt="image.alt"
-        class="main-image"
-        loading="lazy"
-        @load="onImageLoad"
-      />
+      <a
+        :href="image.src"
+        target="_blank"
+        rel="noopener"
+        class="main-image-link"
+        :aria-label="`Открыть изображение: ${image.alt}`"
+      >
+        <img
+          :src="image.src"
+          :alt="image.alt"
+          class="main-image"
+          loading="lazy"
+          @load="onImageLoad"
+        />
+      </a>
 
       <button
         v-for="spot in image.hotspots"
@@ -19,6 +27,7 @@
         @mouseleave="activeSpot = null"
         @click="toggleSpot(spot.id)"
         :aria-label="spot.title"
+        type="button"
       >
         <span class="marker-dot"></span>
         <span class="marker-pulse"></span>
@@ -37,7 +46,7 @@
         </div>
       </Transition>
     </div>
-    <p class="image-hint">Наведите на маркер, чтобы узнать детали конструкции</p>
+    <p class="image-hint">Кликните маркер или изображение, чтобы посмотреть деталь или открыть фото.</p>
   </div>
 </template>
 
@@ -66,7 +75,7 @@ const getMarkerPosition = (spot) => {
 const getTooltipPosition = (spot) => {
   return {
     left: spot.x + '%',
-    top: (spot.y - 12) + '%'
+    top: (spot.y - 14) + '%'
   }
 }
 
@@ -94,6 +103,12 @@ const onImageLoad = () => {
   cursor: default;
 }
 
+.main-image-link {
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
 .main-image {
   display: block;
   width: 100%;
@@ -108,12 +123,12 @@ const onImageLoad = () => {
   background: none;
   border: none;
   cursor: pointer;
-  z-index: 2;
+  z-index: 3;
   padding: 0;
 }
 
 .hotspot-marker.active {
-  z-index: 3;
+  z-index: 4;
 }
 
 .marker-dot {
@@ -156,6 +171,7 @@ const onImageLoad = () => {
     transform: translate(-50%, -50%) scale(0.8);
     opacity: 0.6;
   }
+
   100% {
     transform: translate(-50%, -50%) scale(1.8);
     opacity: 0;

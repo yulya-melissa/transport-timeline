@@ -1,3 +1,5 @@
+import timeline from '~/content/inventions/timeline.json'
+
 interface Hotspot {
   id: string
   x: number
@@ -21,12 +23,16 @@ interface Invention {
   slug: string
   title: string
   year: number
+  yearLabel: string
   era: string
   inventor: string
   type: string
-  status: string
+  branch: 'mainline' | 'adjacent'
+  status: 'key' | 'important' | 'contested' | 'indirect' | 'project'
+  statusLabel: string
   image_main: string
   image_hero: string
+  hover_points: string[]
   interactive_image: InteractiveImage
   fact: string
   history: string
@@ -34,28 +40,20 @@ interface Invention {
   fate: string
   specs: Spec[]
   related_persons: string[]
-  previous: string | null
-  next: string | null
   sources: string[]
 }
 
 export const useInventions = () => {
-  const modules = import.meta.glob('~/content/inventions/*.json', {
-    import: 'default',
-    eager: true
-  })
-
-  const all: Invention[] = Object.values(modules)
-    .map((m: any) => ({ ...m }))
-    .sort((a, b) => a.year - b.year)
+  const all: Invention[] = [...(timeline as Invention[])].sort((a, b) => a.year - b.year)
 
   const getBySlug = (slug: string): Invention | null => {
     return all.find((i) => i.slug === slug) || null
   }
 
-  const getRandom = (): Invention | null => {
-    if (all.length === 0) return null
-    return all[Math.floor(Math.random() * all.length)]
+  const getRandom = (collection?: Invention[]): Invention | null => {
+    const pool = collection && collection.length ? collection : all
+    if (pool.length === 0) return null
+    return pool[Math.floor(Math.random() * pool.length)]
   }
 
   const getNeighbors = (slug: string) => {
@@ -68,11 +66,11 @@ export const useInventions = () => {
 
   const searchInventions = (query: string): Invention[] => {
     const q = query.toLowerCase()
-    return all.filter(
-      (i) =>
-        i.title.toLowerCase().includes(q) ||
-        i.inventor.toLowerCase().includes(q) ||
-        i.fact.toLowerCase().includes(q)
+    return all.filter((i) =>
+      i.title.toLowerCase().includes(q) ||
+      i.inventor.toLowerCase().includes(q) ||
+      i.fact.toLowerCase().includes(q) ||
+      i.hover_points.some((point) => point.toLowerCase().includes(q))
     )
   }
 

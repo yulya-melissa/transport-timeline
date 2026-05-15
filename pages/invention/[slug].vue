@@ -1,7 +1,7 @@
-<template>
+﻿<template>
   <div v-if="invention" class="invention-page">
     <div class="container">
-      <NuxtLink to="/" class="back-link">← Вернуться на ленту времени</NuxtLink>
+      <NuxtLink to="/" class="back-link">← Вернуться к хронологии</NuxtLink>
 
       <article class="invention-article">
         <header class="invention-header fade-up">
@@ -9,16 +9,23 @@
             <span class="invention-era">{{ invention.era }}</span>
             <span class="invention-dot">·</span>
             <span class="invention-status">{{ statusLabel }}</span>
+            <span class="invention-dot">·</span>
+            <span>{{ invention.yearLabel }}</span>
           </div>
           <h1 class="invention-title">{{ invention.title }}</h1>
           <p class="invention-inventor">{{ invention.inventor }}</p>
         </header>
 
-        <div class="invention-image fade-up">
-          <img
-            :src="invention.image_main"
-            :alt="invention.title"
-          />
+        <div class="hero-media fade-up">
+          <a
+            :href="invention.image_hero"
+            target="_blank"
+            rel="noopener"
+            class="hero-link"
+            :aria-label="`Открыть изображение в полном размере: ${invention.title}`"
+          >
+            <img :src="invention.image_hero" :alt="invention.title" />
+          </a>
         </div>
 
         <section class="content-section fade-up">
@@ -27,8 +34,16 @@
         </section>
 
         <section class="content-section fade-up">
-          <h2>Конструкция</h2>
+          <h2>Переход на интерактивную конструкцию</h2>
+          <ul class="hover-list">
+            <li v-for="point in invention.hover_points" :key="point">{{ point }}</li>
+          </ul>
           <InteractiveImage :image="invention.interactive_image" />
+        </section>
+
+        <section class="content-section fade-up">
+          <h2>Значение для транспортной истории</h2>
+          <div class="text-block" v-html="formattedSignificance"></div>
         </section>
 
         <section class="content-section fade-up">
@@ -45,16 +60,6 @@
           </div>
         </section>
 
-        <section class="content-section fade-up">
-          <h2>Значение для науки</h2>
-          <div class="text-block" v-html="formattedSignificance"></div>
-        </section>
-
-        <section class="content-section fade-up">
-          <h2>Судьба проекта</h2>
-          <div class="text-block" v-html="formattedFate"></div>
-        </section>
-
         <section v-if="invention.related_persons.length > 0" class="content-section fade-up">
           <h2>Связанные личности</h2>
           <div class="persons-list">
@@ -68,6 +73,11 @@
           </div>
         </section>
 
+        <section class="content-section fade-up">
+          <h2>Коротко о влиянии</h2>
+          <div class="text-block" v-html="formattedFate"></div>
+        </section>
+
         <nav class="invention-nav fade-up">
           <NuxtLink
             v-if="neighbors.previous"
@@ -77,7 +87,7 @@
             <span class="nav-arrow">←</span>
             <span class="nav-label">Предыдущее</span>
             <span class="nav-title">{{ neighbors.previous.title }}</span>
-            <span class="nav-year">{{ neighbors.previous.year }}</span>
+            <span class="nav-year">{{ neighbors.previous.yearLabel }}</span>
           </NuxtLink>
 
           <div v-else class="nav-card nav-empty"></div>
@@ -90,12 +100,12 @@
             <span class="nav-arrow">→</span>
             <span class="nav-label">Следующее</span>
             <span class="nav-title">{{ neighbors.next.title }}</span>
-            <span class="nav-year">{{ neighbors.next.year }}</span>
+            <span class="nav-year">{{ neighbors.next.yearLabel }}</span>
           </NuxtLink>
         </nav>
 
         <footer class="invention-footer fade-up">
-          <h3>Источники</h3>
+          <h3>Источники по объекту</h3>
           <ul class="sources-list">
             <li v-for="source in invention.sources" :key="source">
               {{ source }}
@@ -108,8 +118,8 @@
 
   <div v-else class="not-found">
     <div class="container">
-      <h1>Изобретение не найдено</h1>
-      <p>Возможно, страница была удалена или перемещена.</p>
+      <h1>Объект не найден</h1>
+      <p>Возможно, страница была удалена или запрошен неправильный адрес.</p>
       <NuxtLink to="/" class="back-link">Вернуться на главную</NuxtLink>
     </div>
   </div>
@@ -125,12 +135,14 @@ const invention = computed(() => getBySlug(route.params.slug))
 const neighbors = computed(() => getNeighbors(route.params.slug))
 
 const statusLabel = computed(() => {
-  const labels = {
-    'реализовано': 'Реализовано',
-    'опытный образец': 'Опытный образец',
-    'проект': 'Проект'
+  const map = {
+    key: 'Ключевой вклад',
+    important: 'Важный вклад',
+    indirect: 'Косвенно связан с автомобильной историей',
+    contested: 'Исторически спорный объект',
+    project: 'Проектный/экспериментальный проект'
   }
-  return labels[invention.value?.status] || invention.value?.status
+  return invention.value ? map[invention.value.status] : ''
 })
 
 const formattedHistory = computed(() => {
@@ -146,7 +158,9 @@ const formattedFate = computed(() => {
 })
 
 useHead({
-  title: invention.value ? `${invention.value.title} — Хроника транспорта России` : 'Изобретение не найдено'
+  title: invention.value
+    ? `${invention.value.title} — Хронология транспорта России`
+    : 'Объект не найден'
 })
 
 useScrollReveal()
@@ -154,12 +168,12 @@ useScrollReveal()
 
 <style scoped>
 .invention-page {
-  padding: 32px 0 80px;
+  padding: 28px 0 90px;
 }
 
 .back-link {
   display: inline-block;
-  margin-bottom: 24px;
+  margin-bottom: 22px;
   font-size: 0.9rem;
   color: var(--accent);
 }
@@ -170,7 +184,7 @@ useScrollReveal()
 
 .invention-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 30px;
 }
 
 .invention-meta {
@@ -179,8 +193,9 @@ useScrollReveal()
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
-  font-size: 0.9rem;
+  font-size: 0.89rem;
   color: var(--text-secondary);
+  flex-wrap: wrap;
 }
 
 .invention-dot {
@@ -189,43 +204,65 @@ useScrollReveal()
 
 .invention-title {
   color: var(--accent);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .invention-inventor {
-  font-size: 1.1rem;
+  font-size: 1.04rem;
   color: var(--text-secondary);
 }
 
-.invention-image {
-  max-width: 800px;
+.hero-media {
+  max-width: 900px;
   margin: 0 auto 40px;
+}
+
+.hero-link {
+  display: block;
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow);
 }
 
-.invention-image img {
+.hero-link img {
   width: 100%;
   object-fit: cover;
 }
 
 .content-section {
-  max-width: 800px;
-  margin: 0 auto 40px;
+  max-width: 900px;
+  margin: 0 auto 42px;
 }
 
 .content-section h2 {
   color: var(--text);
-  margin-bottom: 16px;
-  padding-left: 16px;
+  margin-bottom: 12px;
+  padding-left: 12px;
   border-left: 3px solid var(--accent);
 }
 
 .text-block {
-  font-size: 1rem;
-  line-height: 1.8;
   color: var(--text);
+  line-height: 1.8;
+}
+
+.hover-list {
+  list-style: none;
+  margin-bottom: 16px;
+}
+
+.hover-list li {
+  margin: 6px 0;
+  color: var(--text);
+  position: relative;
+  padding-left: 16px;
+}
+
+.hover-list li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
 }
 
 .specs-table-wrapper {
@@ -238,7 +275,7 @@ useScrollReveal()
 .specs-table td:first-child {
   font-weight: 600;
   color: var(--text-secondary);
-  width: 200px;
+  width: 250px;
 }
 
 .persons-list {
@@ -248,26 +285,25 @@ useScrollReveal()
 }
 
 .person-tag {
-  padding: 8px 16px;
+  padding: 8px 14px;
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: 999px;
   font-size: 0.9rem;
-  color: var(--text);
 }
 
 .invention-nav {
-  max-width: 800px;
-  margin: 40px auto 40px;
+  max-width: 900px;
+  margin: 24px auto 42px;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  gap: 18px;
 }
 
 .nav-card {
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: 18px;
   background: var(--card-bg);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
@@ -276,8 +312,8 @@ useScrollReveal()
 }
 
 .nav-card:hover {
-  box-shadow: var(--shadow);
   transform: translateY(-2px);
+  box-shadow: var(--shadow);
 }
 
 .nav-prev {
@@ -289,29 +325,27 @@ useScrollReveal()
 }
 
 .nav-arrow {
-  font-size: 1.5rem;
+  font-size: 1.3rem;
   color: var(--accent);
-  margin-bottom: 4px;
 }
 
 .nav-label {
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
 }
 
 .nav-title {
   font-family: 'Russo One', sans-serif;
-  font-size: 1rem;
   color: var(--text);
-  margin-top: 4px;
+  margin-bottom: 4px;
 }
 
 .nav-year {
-  font-size: 0.85rem;
   color: var(--accent);
-  margin-top: 2px;
+  font-size: 0.86rem;
 }
 
 .nav-empty {
@@ -319,14 +353,14 @@ useScrollReveal()
 }
 
 .invention-footer {
-  max-width: 800px;
-  margin: 40px auto 0;
-  padding-top: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  padding-top: 18px;
   border-top: 1px solid var(--border);
 }
 
 .invention-footer h3 {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--text-secondary);
   margin-bottom: 8px;
 }
@@ -338,27 +372,27 @@ useScrollReveal()
 .sources-list li {
   font-size: 0.8rem;
   color: var(--text-secondary);
-  padding: 2px 0;
+  padding: 3px 0;
 }
 
 .not-found {
-  padding: 120px 0;
+  padding: 100px 0 120px;
   text-align: center;
 }
 
 .not-found h1 {
   color: var(--accent);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .not-found p {
   color: var(--text-secondary);
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 @media (max-width: 768px) {
-  .invention-title {
-    font-size: 1.5rem;
+  .hero-media {
+    margin-bottom: 26px;
   }
 
   .invention-nav {
@@ -366,7 +400,7 @@ useScrollReveal()
   }
 
   .specs-table td:first-child {
-    width: 120px;
+    width: 160px;
   }
 }
 </style>

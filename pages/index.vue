@@ -1,11 +1,12 @@
-<template>
+﻿<template>
   <div class="home">
     <section class="hero-section">
       <div class="container">
-        <h1 class="hero-title">Хроника транспортных изобретений России</h1>
+        <p class="hero-kicker">Интерактивная история транспорта России</p>
+        <h1 class="hero-title">Эволюция техники в мини‑спиральной ленте</h1>
         <p class="hero-subtitle">
-          Путешествие по истории отечественной транспортной науки:
-          от паровой телеги Кулибина до современных электромобилей
+          От первого самодвижущегося экипажа Ивана Кулибина до современных электрических платформ и космических машин.
+          Выбирайте ветку, статус, год или имя, нажимайте на карточку — и переходите к развёрнутой странице.
         </p>
       </div>
     </section>
@@ -17,11 +18,14 @@
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="Поиск по названию или изобретателю..."
               class="search-input"
+              placeholder="Поиск по названию, изобретателю или роли в истории..."
               @input="onSearchInput"
             />
-            <div v-if="searchSuggestions.length > 0 && searchQuery.length > 0" class="search-suggestions">
+            <div
+              v-if="searchSuggestions.length > 0 && searchQuery.length > 0"
+              class="search-suggestions"
+            >
               <button
                 v-for="suggestion in searchSuggestions"
                 :key="suggestion.slug"
@@ -29,12 +33,26 @@
                 @click="goToInvention(suggestion.slug)"
               >
                 <span class="suggestion-title">{{ suggestion.title }}</span>
-                <span class="suggestion-year">{{ suggestion.year }}</span>
+                <span class="suggestion-meta">{{ suggestion.yearLabel }}</span>
               </button>
             </div>
           </div>
 
-          <div class="filter-group">
+          <div class="filter-strip">
+            <span class="filter-label">Ветка:</span>
+            <button
+              v-for="option in branchOptions"
+              :key="option.value"
+              class="filter-btn"
+              :class="{ active: activeBranch === option.value }"
+              @click="activeBranch = activeBranch === option.value ? null : option.value"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+
+          <div class="filter-strip">
+            <span class="filter-label">Тип:</span>
             <button
               v-for="type in types"
               :key="type.value"
@@ -46,19 +64,8 @@
             </button>
           </div>
 
-          <div class="filter-group">
-            <button
-              v-for="era in eras"
-              :key="era.value"
-              class="filter-btn"
-              :class="{ active: activeEra === era.value }"
-              @click="activeEra = activeEra === era.value ? null : era.value"
-            >
-              {{ era.label }}
-            </button>
-          </div>
-
-          <div class="filter-group">
+          <div class="filter-strip">
+            <span class="filter-label">Статус:</span>
             <button
               v-for="status in statuses"
               :key="status.value"
@@ -70,29 +77,66 @@
             </button>
           </div>
 
-          <button
-            v-if="hasActiveFilters"
-            class="clear-filters-btn"
-            @click="clearFilters"
-          >
-            Сбросить фильтры
-          </button>
-        </div>
+          <div class="filter-strip">
+            <span class="filter-label">Год:</span>
+            <button
+              v-for="year in availableYears"
+              :key="year"
+              class="filter-btn"
+              :class="{ active: activeYear === year }"
+              @click="activeYear = activeYear === year ? null : year"
+            >
+              {{ year }}
+            </button>
+          </div>
 
-        <div class="timeline">
-          <div class="timeline-line"></div>
-          <TransitionGroup name="timeline-card">
-            <TimelineCard
-              v-for="invention in filteredInventions"
-              :key="invention.slug"
-              :invention="invention"
-            />
-          </TransitionGroup>
+          <div class="actions-strip">
+            <button class="random-btn" type="button" @click="goToRandom">
+              🎲 Случайный объект
+            </button>
+            <button
+              v-if="hasActiveFilters"
+              class="clear-filters-btn"
+              @click="clearFilters"
+            >
+              Сбросить фильтры
+            </button>
+          </div>
         </div>
 
         <div v-if="filteredInventions.length === 0" class="empty-state">
-          <p>Ничего не найдено. Попробуйте изменить параметры поиска или фильтры.</p>
+          <p>По заданным фильтрам пока ничего не найдено. Смените настройки поиска или откройте случайный объект.</p>
         </div>
+
+        <section v-if="filteredGroups.mainline.length > 0" class="timeline-block">
+          <div class="section-title-wrap">
+            <h2>Автомобильная линия</h2>
+            <p>Ключевые вехи развития отечественного автотранспорта.</p>
+          </div>
+          <div class="spiral-track">
+            <TimelineCard
+              v-for="(invention, index) in filteredGroups.mainline"
+              :key="invention.slug"
+              :index="index"
+              :invention="invention"
+            />
+          </div>
+        </section>
+
+        <section v-if="filteredGroups.adjacent.length > 0" class="timeline-block">
+          <div class="section-title-wrap">
+            <h2>Соседние ветви</h2>
+            <p>Важные направления техники, которые влияли на транспортную экосистему, но не были автоиндустрией напрямую.</p>
+          </div>
+          <div class="spiral-track">
+            <TimelineCard
+              v-for="(invention, index) in filteredGroups.adjacent"
+              :key="invention.slug"
+              :index="index"
+              :invention="invention"
+            />
+          </div>
+        </section>
       </div>
     </section>
   </div>
@@ -104,60 +148,83 @@ import TimelineCard from '~/components/timeline/TimelineCard.vue'
 const { all, searchInventions } = useInventions()
 
 const searchQuery = ref('')
+const activeBranch = ref(null)
 const activeType = ref(null)
-const activeEra = ref(null)
 const activeStatus = ref(null)
+const activeYear = ref(null)
 const searchSuggestions = ref([])
 
-const types = [
-  { label: 'Наземный', value: 'наземный' },
-  { label: 'Водный', value: 'водный' },
-  { label: 'Воздушный', value: 'воздушный' },
-  { label: 'Космический', value: 'космический' },
-  { label: 'Экспериментальный', value: 'экспериментальный' }
+const branchOptions = [
+  { label: 'Все', value: null },
+  { label: 'Автомобильная линия', value: 'mainline' },
+  { label: 'Соседние ветви', value: 'adjacent' }
 ]
 
-const eras = [
-  { label: 'Российская Империя', value: 'Российская Империя' },
-  { label: 'СССР', value: 'СССР' },
-  { label: 'Современная Россия', value: 'Современная Россия' }
+const types = [
+  { label: 'Наземный', value: 'Наземный' },
+  { label: 'Водный', value: 'Водный' },
+  { label: 'Железнодорожный', value: 'Железнодорожный' },
+  { label: 'Воздушный', value: 'Воздушный' },
+  { label: 'Космический', value: 'Космический' },
+  { label: 'Экспериментальный', value: 'Экспериментальный' }
 ]
 
 const statuses = [
-  { label: 'Реализовано', value: 'реализовано' },
-  { label: 'Опытный образец', value: 'опытный образец' },
-  { label: 'Проект', value: 'проект' }
+  { label: 'Ключевой', value: 'key' },
+  { label: 'Важный', value: 'important' },
+  { label: 'Косвенно', value: 'indirect' },
+  { label: 'Спорный', value: 'contested' },
+  { label: 'Проект', value: 'project' }
 ]
 
-const hasActiveFilters = computed(() => {
-  return activeType.value || activeEra.value || activeStatus.value
+const availableYears = computed(() => {
+  return [...new Set(all.map((inv) => inv.year))].sort((a, b) => a - b)
 })
 
 const filteredInventions = computed(() => {
   let result = all
 
-  if (searchQuery.value) {
+  if (searchQuery.value.trim()) {
     result = searchInventions(searchQuery.value)
   }
 
-  if (activeType.value) {
-    result = result.filter(i => i.type === activeType.value)
+  if (activeBranch.value) {
+    result = result.filter((inv) => inv.branch === activeBranch.value)
   }
 
-  if (activeEra.value) {
-    result = result.filter(i => i.era === activeEra.value)
+  if (activeType.value) {
+    result = result.filter((inv) => inv.type === activeType.value)
   }
 
   if (activeStatus.value) {
-    result = result.filter(i => i.status === activeStatus.value)
+    result = result.filter((inv) => inv.status === activeStatus.value)
+  }
+
+  if (activeYear.value !== null) {
+    result = result.filter((inv) => inv.year === activeYear.value)
   }
 
   return result
 })
 
+const filteredGroups = computed(() => ({
+  mainline: filteredInventions.value.filter((inv) => inv.branch === 'mainline'),
+  adjacent: filteredInventions.value.filter((inv) => inv.branch === 'adjacent')
+}))
+
+const hasActiveFilters = computed(() => {
+  return (
+    activeBranch.value !== null ||
+    activeType.value !== null ||
+    activeStatus.value !== null ||
+    activeYear.value !== null ||
+    searchQuery.value.trim().length > 0
+  )
+})
+
 const onSearchInput = () => {
   if (searchQuery.value.length > 0) {
-    searchSuggestions.value = searchInventions(searchQuery.value).slice(0, 5)
+    searchSuggestions.value = searchInventions(searchQuery.value).slice(0, 6)
   } else {
     searchSuggestions.value = []
   }
@@ -169,10 +236,17 @@ const goToInvention = (slug) => {
   navigateTo(`/invention/${slug}`)
 }
 
+const goToRandom = () => {
+  if (filteredInventions.value.length === 0) return
+  const random = filteredInventions.value[Math.floor(Math.random() * filteredInventions.value.length)]
+  navigateTo(`/invention/${random.slug}`)
+}
+
 const clearFilters = () => {
+  activeBranch.value = null
   activeType.value = null
-  activeEra.value = null
   activeStatus.value = null
+  activeYear.value = null
   searchQuery.value = ''
   searchSuggestions.value = []
 }
@@ -182,8 +256,15 @@ useScrollReveal()
 
 <style scoped>
 .hero-section {
-  padding: 60px 0 40px;
-  text-align: center;
+  padding: 54px 0 42px;
+}
+
+.hero-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  margin-bottom: 8px;
 }
 
 .hero-title {
@@ -193,33 +274,29 @@ useScrollReveal()
 
 .hero-subtitle {
   color: var(--text-secondary);
-  font-size: 1.1rem;
-  max-width: 600px;
-  margin: 0 auto;
-  line-height: 1.6;
+  max-width: 780px;
+  font-size: 1.03rem;
+  line-height: 1.65;
 }
 
 .timeline-section {
-  padding-bottom: 80px;
+  padding-bottom: 64px;
 }
 
 .filters {
-  margin-bottom: 40px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: flex-start;
+  margin-bottom: 28px;
+  display: grid;
+  gap: 14px;
 }
 
 .search-wrapper {
   position: relative;
-  width: 100%;
-  max-width: 400px;
+  max-width: 520px;
 }
 
 .search-input {
   width: 100%;
-  padding: 10px 16px;
+  padding: 12px 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font-family: 'Inter', sans-serif;
@@ -241,148 +318,165 @@ useScrollReveal()
   right: 0;
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
   box-shadow: var(--shadow);
   z-index: 50;
-  margin-top: 4px;
-  overflow: hidden;
 }
 
 .suggestion-item {
   display: flex;
+  width: 100%;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
-  padding: 10px 16px;
   border: none;
   background: none;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
+  padding: 10px 12px;
   color: var(--text);
   transition: background var(--transition);
+  font-size: 0.9rem;
 }
 
 .suggestion-item:hover {
   background: var(--bg);
 }
 
-.suggestion-year {
+.suggestion-meta {
   color: var(--text-secondary);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
-.filter-group {
+.filter-strip {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
 }
 
-.filter-btn {
-  padding: 6px 14px;
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  background: var(--card-bg);
-  cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.85rem;
+.filter-label {
+  font-size: 0.8rem;
   color: var(--text-secondary);
+  width: 100%;
+  margin-bottom: -2px;
+}
+
+.filter-btn {
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 0.84rem;
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
   transition: all var(--transition);
 }
 
 .filter-btn:hover {
-  border-color: var(--gold);
-  color: var(--text);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .filter-btn.active {
   background: var(--accent);
-  color: #fff;
   border-color: var(--accent);
+  color: #fff;
+}
+
+.actions-strip {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.random-btn {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.86rem;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.random-btn:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 .clear-filters-btn {
-  padding: 6px 14px;
   border: none;
   background: none;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.85rem;
   color: var(--accent);
   text-decoration: underline;
+  font-size: 0.85rem;
 }
 
-.timeline {
+.timeline-block {
+  margin-top: 28px;
+}
+
+.section-title-wrap {
+  margin-bottom: 14px;
+}
+
+.section-title-wrap h2 {
+  font-size: 1.5rem;
+  color: var(--accent);
+}
+
+.section-title-wrap p {
+  color: var(--text-secondary);
+  max-width: 760px;
+}
+
+.spiral-track {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 28px;
+  padding-top: 14px;
 }
 
-.timeline-line {
+.spiral-track::before {
+  content: '';
   position: absolute;
+  top: 24px;
   left: 50%;
-  top: 0;
-  bottom: 0;
   width: 2px;
-  background: var(--border);
+  bottom: 10px;
   transform: translateX(-50%);
-  z-index: 0;
+  border-left: 2px dashed var(--border);
 }
 
 .empty-state {
+  padding: 50px 20px;
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
   text-align: center;
-  padding: 60px 20px;
   color: var(--text-secondary);
-  font-size: 1.1rem;
-}
-
-.timeline-card-enter-active {
-  transition: all 0.5s ease;
-}
-
-.timeline-card-leave-active {
-  transition: all 0.3s ease;
-}
-
-.timeline-card-enter-from {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.timeline-card-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
+  background: var(--card-bg);
+  margin: 12px 0;
 }
 
 @media (max-width: 768px) {
   .hero-section {
-    padding: 40px 0 24px;
+    padding: 36px 0 28px;
   }
 
   .hero-title {
-    font-size: 1.6rem;
+    font-size: 2rem;
   }
 
   .hero-subtitle {
     font-size: 0.95rem;
   }
 
-  .filters {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .search-wrapper {
-    max-width: 100%;
-  }
-
-  .timeline-line {
+  .spiral-track::before {
     left: 20px;
-  }
-
-  .filter-group {
-    width: 100%;
   }
 }
 </style>

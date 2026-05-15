@@ -1,30 +1,13 @@
-<template>
+﻿<template>
   <header class="header">
     <div class="container header-inner">
       <NuxtLink to="/" class="logo">
-        <span class="logo-text">Хроника транспорта России</span>
+        <span class="logo-text">Хроника истории транспорта России</span>
       </NuxtLink>
-      <button
-        class="random-btn"
-        @click="goToRandom"
-        title="Случайное изобретение"
-      >
-        <span class="random-text">Случайное</span>
-      </button>
+      <p class="header-subtitle">Главная линия автомобилей + соседние инженерные ветви</p>
     </div>
   </header>
 </template>
-
-<script setup>
-const { getRandom } = useInventions()
-
-const goToRandom = () => {
-  const invention = getRandom()
-  if (invention) {
-    navigateTo(`/invention/${invention.slug}`)
-  }
-}
-</script>
 
 <style scoped>
 .header {
@@ -40,20 +23,14 @@ const goToRandom = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   padding-top: 12px;
   padding-bottom: 12px;
 }
 
 .logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   text-decoration: none;
   color: var(--text);
-}
-
-.logo-icon {
-  font-size: 1.5rem;
 }
 
 .logo-text {
@@ -62,37 +39,25 @@ const goToRandom = () => {
   color: var(--accent);
 }
 
-.random-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  padding: 8px 16px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.9rem;
-  color: var(--text);
-  transition: all var(--transition);
+.header-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.86rem;
 }
 
-.random-btn:hover {
-  background: var(--gold-light);
-  border-color: var(--gold);
-}
-
-.random-icon {
-  font-size: 1.1rem;
-}
-
-@media (max-width: 600px) {
-  .random-text {
-    display: none;
+@media (max-width: 768px) {
+  .header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-top: 14px;
+    padding-bottom: 14px;
   }
-  
+
   .logo-text {
-    font-size: 0.85rem;
+    font-size: 0.95rem;
+  }
+
+  .header-subtitle {
+    font-size: 0.8rem;
   }
 }
 </style>
