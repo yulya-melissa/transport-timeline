@@ -45,9 +45,34 @@ export const useInventions = () => {
     eager: true
   })
 
+  const config = useRuntimeConfig()
+  const baseURL = config.app?.baseURL || '/'
+
   const all: Invention[] = Object.values(modules)
     .map((m: any) => ({ ...m }))
     .sort((a, b) => a.year - b.year)
+
+  const fixPath = (path: string): string => {
+    if (!path) return path
+    if (path.startsWith('http')) return path
+
+    const cleanPath = path.replace(/^\//, '')
+
+    const cleanBase = baseURL.replace(/\//g, '')
+
+    if (cleanPath.startsWith(cleanBase)) {
+      return '/' + cleanPath
+    }
+    return baseURL + cleanPath
+  }
+
+  all.forEach(inv => {
+    inv.image_main = fixPath(inv.image_main)
+    inv.image_hero = fixPath(inv.image_hero)
+    if (inv.interactive_image) {
+      inv.interactive_image.src = fixPath(inv.interactive_image.src)
+    }
+  })
 
   const getBySlug = (slug: string): Invention | null => {
     return all.find((i) => i.slug === slug) || null

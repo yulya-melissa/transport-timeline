@@ -5,7 +5,7 @@
 </template>
 
 <style>
-/* Подключение шрифтов */
+
 @font-face {
   font-family: 'Russo One';
   src: url('./assets/fonts/RussoOne-Regular.ttf') format('truetype');
@@ -30,7 +30,7 @@
   font-display: swap;
 }
 
-/* Переменные */
+
 :root {
   --bg: #FBF7F0;
   --card-bg: #FFFFFF;
@@ -50,7 +50,7 @@
   --transition: 0.3s ease;
 }
 
-/* Сброс */
+
 *,
 *::before,
 *::after {
@@ -104,7 +104,6 @@ img {
   padding: 0 24px;
 }
 
-/* Анимации появления */
 .fade-up {
   opacity: 0;
   transform: translateY(30px);
@@ -116,7 +115,6 @@ img {
   transform: translateY(0);
 }
 
-/* Таблица */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -141,7 +139,6 @@ table td:last-child {
   color: var(--text);
 }
 
-/* Скроллбар */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -159,7 +156,6 @@ table td:last-child {
   background: var(--gold);
 }
 
-/* Переходы между страницами */
 .page-enter-active,
 .page-leave-active {
   transition: opacity 0.3s ease;

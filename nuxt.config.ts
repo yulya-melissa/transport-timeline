@@ -1,17 +1,23 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
+// nuxt.config.ts
 export default defineNuxtConfig({
   app: {
     baseURL: '/transport-timeline/',
+    buildAssetsDir: 'assets', 
   },
 
   nitro: {
-    preset: 'github-pages'
+    preset: 'github-pages',
+    static: true, 
+    prerender: {
+      crawlLinks: true,
+      routes: ['/']
+    }
   },
 
-  typescript: {
-    strict: false,
-    shim: false
+  experimental: {
+    payloadExtraction: false 
   },
 
+  ssr: true,
   devtools: { enabled: true }
 })

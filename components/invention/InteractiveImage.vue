@@ -6,7 +6,6 @@
         :alt="image.alt"
         class="main-image"
         loading="lazy"
-        @load="onImageLoad"
       />
 
       <button

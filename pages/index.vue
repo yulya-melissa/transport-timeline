@@ -13,61 +13,72 @@
     <section class="timeline-section">
       <div class="container">
         <div class="filters">
-          <div class="search-wrapper">
-            <input
-              v-model="searchQuery"
-              type="text"
-              placeholder="Поиск по названию или изобретателю..."
-              class="search-input"
-              @input="onSearchInput"
-            />
-            <div v-if="searchSuggestions.length > 0 && searchQuery.length > 0" class="search-suggestions">
+          <div class="search-row">
+            <div class="search-wrapper">
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Поиск по названию или изобретателю..."
+                class="search-input"
+                @input="onSearchInput"
+              />
+              <div v-if="searchSuggestions.length > 0 && searchQuery.length > 0" class="search-suggestions">
+                <button
+                  v-for="suggestion in searchSuggestions"
+                  :key="suggestion.slug"
+                  class="suggestion-item"
+                  @click="goToInvention(suggestion.slug)"
+                >
+                  <span class="suggestion-title">{{ suggestion.title }}</span>
+                  <span class="suggestion-year">{{ suggestion.year }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="filter-row">
+            <span class="filter-label">Тип транспорта</span>
+            <div class="filter-options">
               <button
-                v-for="suggestion in searchSuggestions"
-                :key="suggestion.slug"
-                class="suggestion-item"
-                @click="goToInvention(suggestion.slug)"
+                v-for="type in types"
+                :key="type.value"
+                class="filter-btn"
+                :class="{ active: activeType === type.value }"
+                @click="activeType = activeType === type.value ? null : type.value"
               >
-                <span class="suggestion-title">{{ suggestion.title }}</span>
-                <span class="suggestion-year">{{ suggestion.year }}</span>
+                {{ type.label }}
               </button>
             </div>
           </div>
 
-          <div class="filter-group">
-            <button
-              v-for="type in types"
-              :key="type.value"
-              class="filter-btn"
-              :class="{ active: activeType === type.value }"
-              @click="activeType = activeType === type.value ? null : type.value"
-            >
-              {{ type.label }}
-            </button>
+          <div class="filter-row">
+            <span class="filter-label">Период</span>
+            <div class="filter-options">
+              <button
+                v-for="era in eras"
+                :key="era.value"
+                class="filter-btn"
+                :class="{ active: activeEra === era.value }"
+                @click="activeEra = activeEra === era.value ? null : era.value"
+              >
+                {{ era.label }}
+              </button>
+            </div>
           </div>
 
-          <div class="filter-group">
-            <button
-              v-for="era in eras"
-              :key="era.value"
-              class="filter-btn"
-              :class="{ active: activeEra === era.value }"
-              @click="activeEra = activeEra === era.value ? null : era.value"
-            >
-              {{ era.label }}
-            </button>
-          </div>
-
-          <div class="filter-group">
-            <button
-              v-for="status in statuses"
-              :key="status.value"
-              class="filter-btn"
-              :class="{ active: activeStatus === status.value }"
-              @click="activeStatus = activeStatus === status.value ? null : status.value"
-            >
-              {{ status.label }}
-            </button>
+          <div class="filter-row">
+            <span class="filter-label">Статус</span>
+            <div class="filter-options">
+              <button
+                v-for="status in statuses"
+                :key="status.value"
+                class="filter-btn"
+                :class="{ active: activeStatus === status.value }"
+                @click="activeStatus = activeStatus === status.value ? null : status.value"
+              >
+                {{ status.label }}
+              </button>
+            </div>
           </div>
 
           <button
@@ -75,7 +86,7 @@
             class="clear-filters-btn"
             @click="clearFilters"
           >
-            Сбросить фильтры
+            Сбросить все фильтры
           </button>
         </div>
 
@@ -182,19 +193,20 @@ useScrollReveal()
 
 <style scoped>
 .hero-section {
-  padding: 60px 0 40px;
+  padding: 60px 0 32px;
   text-align: center;
 }
 
 .hero-title {
   color: var(--accent);
   margin-bottom: 12px;
+  font-size: 2.2rem;
 }
 
 .hero-subtitle {
   color: var(--text-secondary);
-  font-size: 1.1rem;
-  max-width: 600px;
+  font-size: 1.05rem;
+  max-width: 560px;
   margin: 0 auto;
   line-height: 1.6;
 }
@@ -204,27 +216,32 @@ useScrollReveal()
 }
 
 .filters {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
   margin-bottom: 40px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.search-row {
+  width: 100%;
 }
 
 .search-wrapper {
   position: relative;
   width: 100%;
-  max-width: 400px;
 }
 
 .search-input {
   width: 100%;
-  padding: 10px 16px;
+  padding: 12px 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   font-family: 'Inter', sans-serif;
   font-size: 0.95rem;
-  background: var(--card-bg);
+  background: var(--bg);
   color: var(--text);
   transition: border-color var(--transition);
 }
@@ -234,17 +251,20 @@ useScrollReveal()
   border-color: var(--gold);
 }
 
+.search-input::placeholder {
+  color: #b0a89a;
+}
+
 .search-suggestions {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 4px);
   left: 0;
   right: 0;
   background: var(--card-bg);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
   z-index: 50;
-  margin-top: 4px;
   overflow: hidden;
 }
 
@@ -272,27 +292,43 @@ useScrollReveal()
   font-size: 0.85rem;
 }
 
-.filter-group {
+.filter-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.filter-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 130px;
+  padding-top: 7px;
+}
+
+.filter-options {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  flex: 1;
 }
 
 .filter-btn {
-  padding: 6px 14px;
+  padding: 7px 16px;
   border: 1px solid var(--border);
   border-radius: 20px;
-  background: var(--card-bg);
+  background: var(--bg);
   cursor: pointer;
   font-family: 'Inter', sans-serif;
   font-size: 0.85rem;
-  color: var(--text-secondary);
+  color: var(--text);
   transition: all var(--transition);
+  white-space: nowrap;
 }
 
 .filter-btn:hover {
   border-color: var(--gold);
-  color: var(--text);
+  background: var(--gold-light);
 }
 
 .filter-btn.active {
@@ -302,14 +338,21 @@ useScrollReveal()
 }
 
 .clear-filters-btn {
-  padding: 6px 14px;
-  border: none;
-  background: none;
+  align-self: flex-start;
+  padding: 8px 18px;
+  border: 1px solid var(--accent);
+  border-radius: 20px;
+  background: transparent;
   cursor: pointer;
   font-family: 'Inter', sans-serif;
   font-size: 0.85rem;
   color: var(--accent);
-  text-decoration: underline;
+  transition: all var(--transition);
+}
+
+.clear-filters-btn:hover {
+  background: var(--accent);
+  color: #fff;
 }
 
 .timeline {
@@ -357,32 +400,34 @@ useScrollReveal()
 
 @media (max-width: 768px) {
   .hero-section {
-    padding: 40px 0 24px;
+    padding: 36px 0 24px;
   }
 
   .hero-title {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
   }
 
   .hero-subtitle {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
   }
 
   .filters {
-    flex-direction: column;
-    gap: 12px;
+    padding: 16px;
+    gap: 14px;
   }
 
-  .search-wrapper {
-    max-width: 100%;
+  .filter-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .filter-label {
+    min-width: auto;
+    padding-top: 0;
   }
 
   .timeline-line {
     left: 20px;
-  }
-
-  .filter-group {
-    width: 100%;
   }
 }
 </style>
