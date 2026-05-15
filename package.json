@@ -1,17 +1,19 @@
 {
   "name": "transport-timeline",
-  "type": "module",
   "private": true,
+  "type": "module",
   "scripts": {
-    "build": "nuxt build",
-    "dev": "nuxt dev",
-    "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "build": "nuxi build",
+    "dev": "nuxi dev",
+    "generate": "nuxi generate",
+    "preview": "nuxi preview",
+    "postinstall": "nuxi prepare",
+    "deploy": "npx nuxi generate && npx gh-pages -d .output/public"
   },
-  "dependencies": {
-    "nuxt": "^4.4.5",
-    "vue": "^3.5.34",
-    "vue-router": "^5.0.6"
+  "devDependencies": {
+    "@nuxt/devtools": "latest",
+    "@nuxt/image": "^1.0.0",
+    "nuxt": "^3.10.0",
+    "gh-pages": "^6.0.0"
   }
 }
