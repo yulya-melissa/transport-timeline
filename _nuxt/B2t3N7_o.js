@@ -1,0 +1,1 @@
+import{_ as t,A as s,g as r,d as o}from"./BVXJDD40.js";const a={},c={class:"footer"};function n(_,e){return s(),r("footer",c,[...e[0]||(e[0]=[o("div",{class:"container"},[o("p",{class:"footer-text"}," Учебный проект · Хроника транспортных изобретений России · 2025 ")],-1)])])}const d=t(a,[["render",n],["__scopeId","data-v-f3b070b9"]]);export{d as default};
