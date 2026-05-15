@@ -1,16 +1,18 @@
-import { onMounted, watch, nextTick } from 'vue'
+import { onBeforeUnmount, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 
 export const useScrollReveal = () => {
-  const observeElements = () => {
-    if (import.meta.server) return
+  let observer: IntersectionObserver | null = null
 
-    const observer = new IntersectionObserver(
+  const createObserver = () => {
+    if (observer) return observer
+
+    observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add('visible')
-            observer.unobserve(entry.target)
+            observer?.unobserve(entry.target)
           }
         })
       },
@@ -20,20 +22,44 @@ export const useScrollReveal = () => {
       }
     )
 
+    return observer
+  }
+
+  const observeElements = () => {
+    if (import.meta.server) return
+
+    const current = createObserver()
+
     document.querySelectorAll('.fade-up').forEach((el) => {
-      observer.observe(el)
+      if (!el.classList.contains('visible')) {
+        current.observe(el)
+      }
     })
   }
 
-  onMounted(() => {
+  const refresh = async () => {
+    if (import.meta.server) return
+    await nextTick()
     observeElements()
+  }
+
+  onMounted(() => {
+    refresh()
 
     const route = useRoute()
     watch(
       () => route.fullPath,
-      () => {
-        nextTick(() => observeElements())
-      }
+      () => nextTick(() => observeElements()),
+      { deep: true }
     )
   })
+
+  onBeforeUnmount(() => {
+    observer?.disconnect()
+    observer = null
+  })
+
+  return {
+    refresh
+  }
 }

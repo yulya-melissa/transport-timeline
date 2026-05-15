@@ -38,7 +38,7 @@
             </div>
           </div>
 
-          <div class="filter-strip">
+        <div class="filter-strip">
             <span class="filter-label">Ветка:</span>
             <button
               v-for="option in branchOptions"
@@ -46,6 +46,19 @@
               class="filter-btn"
               :class="{ active: activeBranch === option.value }"
               @click="activeBranch = activeBranch === option.value ? null : option.value"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+
+          <div class="filter-strip">
+            <span class="filter-label">Тэг:</span>
+            <button
+              v-for="option in tagOptions"
+              :key="option.value"
+              class="filter-btn"
+              :class="{ active: activeTag === option.value }"
+              @click="activeTag = activeTag === option.value ? null : option.value"
             >
               {{ option.label }}
             </button>
@@ -152,37 +165,73 @@ const activeBranch = ref(null)
 const activeType = ref(null)
 const activeMassAdoption = ref(null)
 const activeYear = ref(null)
+const activeTag = ref(null)
 const searchSuggestions = ref([])
 
-const branchOptions = [
-  { label: 'Все', value: null },
-  { label: 'Автопоток', value: 'mainline' },
-  { label: 'Параллельные направления', value: 'adjacent' }
-]
+const normalizeInvention = (invent) => ({
+  ...invent,
+  type: (invent.type || 'Неизвестный').toString().trim(),
+  branch: (invent.branch || 'adjacent').toString().trim(),
+  mass_adoption: typeof invent.mass_adoption === 'boolean' ? invent.mass_adoption : false,
+  tags: Array.isArray(invent.tags) ? invent.tags : []
+})
 
-const types = [
-  { label: 'Наземный', value: 'Наземный' },
-  { label: 'Водный', value: 'Водный' },
-  { label: 'Железнодорожный', value: 'Железнодорожный' },
-  { label: 'Воздушный', value: 'Воздушный' },
-  { label: 'Космический', value: 'Космический' },
-  { label: 'Экспериментальный', value: 'Экспериментальный' }
-]
+const allInventions = computed(() =>
+  all.map(normalizeInvention)
+)
 
-const massOptions = [
-  { label: 'В массовую эксплуатацию', value: true },
-  { label: 'Не вводилась массово', value: false }
-]
+const branchOptionLabels = {
+  mainline: 'Автопоток',
+  adjacent: 'Параллельные направления',
+  unknown: 'Без ветки'
+}
+
+const branchOptions = computed(() => {
+  const values = [...new Set(allInventions.value.map((inv) => inv.branch))]
+  const known = values.filter((value) => Object.keys(branchOptionLabels).includes(value))
+  const unknown = values.filter((value) => !Object.keys(branchOptionLabels).includes(value))
+
+  return [
+    { label: 'Все', value: null },
+    ...known.map((value) => ({ label: branchOptionLabels[value], value })),
+    ...unknown.map((value) => ({ label: value, value }))
+  ]
+})
+
+const tagOptions = computed(() => {
+  const values = [...new Set(allInventions.value.flatMap((inv) => inv.tags || []))]
+  return [{ label: 'Все', value: null }, ...values.map((value) => ({ label: value, value }))]
+})
+
+const typeOrder = ['Наземный', 'Водный', 'Железнодорожный', 'Воздушный', 'Космический', 'Экспериментальный']
+const types = computed(() => {
+  const values = new Set(allInventions.value.map((inv) => inv.type))
+  const known = typeOrder.filter((value) => values.has(value))
+  const fallback = [...values].filter((value) => !typeOrder.includes(value))
+  return [
+    ...known.map((value) => ({ label: value, value })),
+    ...fallback.map((value) => ({ label: value, value }))
+  ]
+})
+
+const massOptions = computed(() => {
+  const hasMass = allInventions.value.some((inv) => inv.mass_adoption === true)
+  const hasNoMass = allInventions.value.some((inv) => inv.mass_adoption === false)
+  const options = []
+  if (hasMass) options.push({ label: 'В массовую эксплуатацию', value: true })
+  if (hasNoMass) options.push({ label: 'Не вводилась массово', value: false })
+  return options
+})
 
 const availableYears = computed(() => {
-  return [...new Set(all.map((inv) => inv.year))].sort((a, b) => a - b)
+  return [...new Set(allInventions.value.map((inv) => inv.year))].sort((a, b) => a - b)
 })
 
 const filteredInventions = computed(() => {
-  let result = all
+  let result = allInventions.value
 
   if (searchQuery.value.trim()) {
-    result = searchInventions(searchQuery.value)
+    result = searchInventions(searchQuery.value).map(normalizeInvention)
   }
 
   if (activeBranch.value) {
@@ -191,6 +240,10 @@ const filteredInventions = computed(() => {
 
   if (activeType.value) {
     result = result.filter((inv) => inv.type === activeType.value)
+  }
+
+  if (activeTag.value) {
+    result = result.filter((inv) => (inv.tags || []).includes(activeTag.value))
   }
 
   if (activeMassAdoption.value !== null) {
@@ -211,11 +264,12 @@ const filteredGroups = computed(() => ({
 
 const hasActiveFilters = computed(() => {
   return (
-    activeBranch.value !== null ||
-    activeType.value !== null ||
-    activeMassAdoption.value !== null ||
-    activeYear.value !== null ||
-    searchQuery.value.trim().length > 0
+  activeBranch.value !== null ||
+  activeType.value !== null ||
+  activeTag.value !== null ||
+  activeMassAdoption.value !== null ||
+  activeYear.value !== null ||
+  searchQuery.value.trim().length > 0
   )
 })
 
@@ -242,13 +296,22 @@ const goToRandom = () => {
 const clearFilters = () => {
   activeBranch.value = null
   activeType.value = null
+  activeTag.value = null
   activeMassAdoption.value = null
   activeYear.value = null
   searchQuery.value = ''
   searchSuggestions.value = []
 }
 
-useScrollReveal()
+const { refresh: refreshScrollReveal } = useScrollReveal()
+
+watch(
+  filteredInventions,
+  () => {
+    refreshScrollReveal()
+  },
+  { flush: 'post' }
+)
 </script>
 
 <style scoped>

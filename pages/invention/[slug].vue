@@ -6,11 +6,18 @@
       <article class="invention-article">
         <header class="invention-header fade-up">
           <div class="invention-meta">
-            <span class="invention-era">{{ invention.era }}</span>
+            <span class="invention-era">{{ invention.type }}</span>
+            <span class="invention-dot">·</span>
+            <span class="invention-branch">{{ branchLabel }}</span>
             <span class="invention-dot">·</span>
             <span class="invention-mass">{{ massLabel }}</span>
             <span class="invention-dot">·</span>
             <span>{{ invention.yearLabel }}</span>
+          </div>
+          <div v-if="invention.tags.length > 0" class="invention-tags">
+            <span v-for="tag in invention.tags" :key="tag" class="tag-pill">
+              {{ tag }}
+            </span>
           </div>
           <h1 class="invention-title">{{ invention.title }}</h1>
           <p class="invention-inventor">{{ invention.inventor }}</p>
@@ -119,12 +126,28 @@ import InteractiveImage from '~/components/invention/InteractiveImage.vue'
 const route = useRoute()
 const { getBySlug, getNeighbors } = useInventions()
 
-const invention = computed(() => getBySlug(route.params.slug))
+const invention = computed(() => {
+  const item = getBySlug(route.params.slug)
+  if (!item) return null
+
+  return {
+    ...item,
+    tags: Array.isArray(item.tags) ? item.tags : [],
+    branch: (item.branch || 'adjacent').toString().trim()
+  }
+})
 const neighbors = computed(() => getNeighbors(route.params.slug))
 
 const massLabel = computed(() => {
   if (!invention.value) return ''
   return invention.value.mass_adoption ? 'Введён в массовую эксплуатацию' : 'Не введён в массовую эксплуатацию'
+})
+
+const branchLabel = computed(() => {
+  if (!invention.value) return ''
+  if (invention.value.branch === 'mainline') return 'Автопоток'
+  if (invention.value.branch === 'adjacent') return 'Параллельные направления'
+  return 'Без ветки'
 })
 
 const formattedHistory = computed(() => {
@@ -191,6 +214,32 @@ useScrollReveal()
   border-radius: 999px;
   padding: 3px 8px;
   font-size: 0.76rem;
+}
+
+.invention-branch {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 0.76rem;
+}
+
+.invention-tags {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.tag-pill {
+  display: inline-block;
+  background: rgba(180, 68, 60, 0.12);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.74rem;
 }
 
 .invention-title {

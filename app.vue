@@ -8,7 +8,7 @@
 /* Подключение шрифтов */
 @font-face {
   font-family: 'Russo One';
-  src: url('./assets/fonts/RussoOne-Regular.ttf') format('truetype');
+  src: url('~/assets/fonts/RussoOne-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -16,7 +16,7 @@
 
 @font-face {
   font-family: 'Inter';
-  src: url('./assets/fonts/Inter-Regular.ttf') format('truetype');
+  src: url('~/assets/fonts/Inter-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -24,7 +24,7 @@
 
 @font-face {
   font-family: 'Inter';
-  src: url('./assets/fonts/Inter-Bold.ttf') format('truetype');
+  src: url('~/assets/fonts/Inter-Regular.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;

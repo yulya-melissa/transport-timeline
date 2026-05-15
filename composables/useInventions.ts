@@ -33,6 +33,7 @@ interface Invention {
   image_hero: string
   hover_points: string[]
   interactive_image: InteractiveImage
+  tags: string[]
   fact: string
   history: string
   significance: string
