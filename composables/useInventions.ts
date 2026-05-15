@@ -43,18 +43,18 @@ interface Invention {
 }
 
 export const useInventions = () => {
-  const baseURL =
-    (import.meta.env.BASE_URL || '/').replace(/\/$/, '') === '/'
-      ? ''
-      : (import.meta.env.BASE_URL || '/').replace(/\/$/, '')
+  const config = useRuntimeConfig()
+  const baseRaw = config.app?.baseURL || import.meta.env.BASE_URL || '/'
+  const normalizedBase =
+    baseRaw.replace(/\/$/, '') === '/' ? '' : baseRaw.replace(/\/$/, '')
 
   const resolveAssetPath = (value: string) => {
     if (!value) return value
     if (/^(https?:\/\/|\/\/)/.test(value)) return value
-    if (value.startsWith(baseURL)) return value
-    if (!baseURL) return value
+    if (!normalizedBase) return value
+    if (value.startsWith(normalizedBase)) return value
 
-    return `${baseURL}${value.startsWith('/') ? value : `/${value}`}`
+    return `${normalizedBase}${value.startsWith('/') ? value : `/${value}`}`
   }
 
   const all: Invention[] = [...(timeline as Invention[])]
