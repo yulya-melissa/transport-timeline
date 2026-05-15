@@ -43,8 +43,27 @@ interface Invention {
   sources: string[]
 }
 
+const getImageUrl = (path: string): string => {
+  const config = useRuntimeConfig()
+  const baseURL = config.app.baseURL || '/'
+  if (path.startsWith('/')) {
+    return baseURL.replace(/\/$/, '') + path
+  }
+  return path
+}
+
 export const useInventions = () => {
-  const all: Invention[] = [...(timeline as Invention[])].sort((a, b) => a.year - b.year)
+  const all: Invention[] = [...(timeline as Invention[])]
+    .sort((a, b) => a.year - b.year)
+    .map(item => ({
+      ...item,
+      image_main: getImageUrl(item.image_main),
+      image_hero: getImageUrl(item.image_hero),
+      interactive_image: {
+        ...item.interactive_image,
+        src: getImageUrl(item.interactive_image.src)
+      }
+    }))
 
   const getBySlug = (slug: string): Invention | null => {
     return all.find((i) => i.slug === slug) || null
