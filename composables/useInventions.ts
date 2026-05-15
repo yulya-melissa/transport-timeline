@@ -43,7 +43,31 @@ interface Invention {
 }
 
 export const useInventions = () => {
-  const all: Invention[] = [...(timeline as Invention[])].sort((a, b) => a.year - b.year)
+  const baseURL =
+    (import.meta.env.BASE_URL || '/').replace(/\/$/, '') === '/'
+      ? ''
+      : (import.meta.env.BASE_URL || '/').replace(/\/$/, '')
+
+  const resolveAssetPath = (value: string) => {
+    if (!value) return value
+    if (/^(https?:\/\/|\/\/)/.test(value)) return value
+    if (value.startsWith(baseURL)) return value
+    if (!baseURL) return value
+
+    return `${baseURL}${value.startsWith('/') ? value : `/${value}`}`
+  }
+
+  const all: Invention[] = [...(timeline as Invention[])]
+    .map((item) => ({
+      ...item,
+      image_main: resolveAssetPath(item.image_main),
+      image_hero: resolveAssetPath(item.image_hero),
+      interactive_image: {
+        ...item.interactive_image,
+        src: resolveAssetPath(item.interactive_image.src)
+      }
+    }))
+    .sort((a, b) => a.year - b.year)
 
   const getBySlug = (slug: string): Invention | null => {
     return all.find((i) => i.slug === slug) || null

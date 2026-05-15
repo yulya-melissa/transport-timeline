@@ -1,7 +1,13 @@
+const basePath = process.env.NODE_ENV === 'production' ? '/transport-timeline/' : '/'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   app: {
-    baseURL: '/transport-timeline/',
+    baseURL: basePath,
+  },
+
+  vite: {
+    base: basePath,
   },
 
   nitro: {
