@@ -4,7 +4,7 @@
       <NuxtLink to="/" class="logo">
         <span class="logo-text">Хроника истории транспорта России</span>
       </NuxtLink>
-      <p class="header-subtitle">Главная линия автомобилей + соседние инженерные ветви</p>
+      <p class="header-subtitle">История транспорта</p>
     </div>
   </header>
 </template>

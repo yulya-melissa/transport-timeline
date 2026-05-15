@@ -12,7 +12,7 @@
       <div class="card-image">
         <img :src="invention.image_main" :alt="invention.title" loading="lazy" />
         <span class="card-type-badge">{{ typeIcon }}</span>
-        <span class="card-status" :class="statusClass">{{ statusLabel }}</span>
+        <span class="card-mass" :class="massClass">{{ massLabel }}</span>
       </div>
 
       <div class="card-content">
@@ -57,25 +57,18 @@ const branchTone = computed(() => {
   return props.invention.branch === 'mainline' ? 'branch-main' : 'branch-adj'
 })
 
-const statusLabel = computed(() => {
-  const map = {
-    key: 'Ключевой',
-    important: 'Важный',
-    indirect: 'Косвенно',
-    contested: 'Спорный',
-    project: 'Проект'
-  }
-  return map[props.invention.status] || props.invention.statusLabel
+const massLabel = computed(() => {
+  return props.invention.mass_adoption ? 'Введён в массовую эксплуатацию' : 'Не введён в массовую эксплуатацию'
 })
 
-const statusClass = computed(() => `status-${props.invention.status}`)
+const massClass = computed(() => props.invention.mass_adoption ? 'mass-yes' : 'mass-no')
 
 const spiralStyle = computed(() => {
   const direction = position.value === 'left' ? -1 : 1
   const depth = Math.min(280, 60 + props.index * 14)
   const wave = ((props.index % 4) - 1.5) * 24
   const radius = depth + wave
-  const toRotate = direction * (3.5 + props.index * 2.2)
+  const toRotate = props.index === 0 ? direction * 3.5 : 0
   const fromShift = `${direction * 28}px`
   const toShift = `${direction * radius}px`
 
@@ -169,7 +162,7 @@ const typeIcon = computed(() => icons[props.invention.type] || '⚙️')
   font-size: 1.02rem;
 }
 
-.card-status {
+.card-mass {
   position: absolute;
   left: 12px;
   top: 12px;
@@ -181,12 +174,12 @@ const typeIcon = computed(() => icons[props.invention.type] || '⚙️')
   text-transform: uppercase;
 }
 
-.branch-main .card-status {
-  background: var(--accent);
+.card-mass.mass-yes {
+  background: #0f6b3c;
 }
 
-.branch-adj .card-status {
-  background: #2b5ea8;
+.card-mass.mass-no {
+  background: #a24f2f;
 }
 
 .card-content {

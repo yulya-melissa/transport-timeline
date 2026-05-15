@@ -6,7 +6,7 @@
         <h1 class="hero-title">Эволюция техники в мини‑спиральной ленте</h1>
         <p class="hero-subtitle">
           От первого самодвижущегося экипажа Ивана Кулибина до современных электрических платформ и космических машин.
-          Выбирайте ветку, статус, год или имя, нажимайте на карточку — и переходите к развёрнутой странице.
+          Выбирайте ветку, тип, год или признак массовой эксплуатации, вводите имя — и переходите к развёрнутой странице.
         </p>
       </div>
     </section>
@@ -65,15 +65,15 @@
           </div>
 
           <div class="filter-strip">
-            <span class="filter-label">Статус:</span>
+            <span class="filter-label">Массовая эксплуатация:</span>
             <button
-              v-for="status in statuses"
-              :key="status.value"
+              v-for="option in massOptions"
+              :key="String(option.value)"
               class="filter-btn"
-              :class="{ active: activeStatus === status.value }"
-              @click="activeStatus = activeStatus === status.value ? null : status.value"
+              :class="{ active: activeMassAdoption === option.value }"
+              @click="activeMassAdoption = activeMassAdoption === option.value ? null : option.value"
             >
-              {{ status.label }}
+              {{ option.label }}
             </button>
           </div>
 
@@ -110,8 +110,8 @@
 
         <section v-if="filteredGroups.mainline.length > 0" class="timeline-block">
           <div class="section-title-wrap">
-            <h2>Автомобильная линия</h2>
-            <p>Ключевые вехи развития отечественного автотранспорта.</p>
+            <h2>Автопоток</h2>
+            <p>Основные этапы развития отечественного автотранспорта.</p>
           </div>
           <div class="spiral-track">
             <TimelineCard
@@ -125,8 +125,8 @@
 
         <section v-if="filteredGroups.adjacent.length > 0" class="timeline-block">
           <div class="section-title-wrap">
-            <h2>Соседние ветви</h2>
-            <p>Важные направления техники, которые влияли на транспортную экосистему, но не были автоиндустрией напрямую.</p>
+            <h2>Параллельные направления</h2>
+            <p>Другие техники, которые влияли на транспортную экосистему, но не относились к автомобильной линии.</p>
           </div>
           <div class="spiral-track">
             <TimelineCard
@@ -150,14 +150,14 @@ const { all, searchInventions } = useInventions()
 const searchQuery = ref('')
 const activeBranch = ref(null)
 const activeType = ref(null)
-const activeStatus = ref(null)
+const activeMassAdoption = ref(null)
 const activeYear = ref(null)
 const searchSuggestions = ref([])
 
 const branchOptions = [
   { label: 'Все', value: null },
-  { label: 'Автомобильная линия', value: 'mainline' },
-  { label: 'Соседние ветви', value: 'adjacent' }
+  { label: 'Автопоток', value: 'mainline' },
+  { label: 'Параллельные направления', value: 'adjacent' }
 ]
 
 const types = [
@@ -169,12 +169,9 @@ const types = [
   { label: 'Экспериментальный', value: 'Экспериментальный' }
 ]
 
-const statuses = [
-  { label: 'Ключевой', value: 'key' },
-  { label: 'Важный', value: 'important' },
-  { label: 'Косвенно', value: 'indirect' },
-  { label: 'Спорный', value: 'contested' },
-  { label: 'Проект', value: 'project' }
+const massOptions = [
+  { label: 'В массовую эксплуатацию', value: true },
+  { label: 'Не вводилась массово', value: false }
 ]
 
 const availableYears = computed(() => {
@@ -196,8 +193,8 @@ const filteredInventions = computed(() => {
     result = result.filter((inv) => inv.type === activeType.value)
   }
 
-  if (activeStatus.value) {
-    result = result.filter((inv) => inv.status === activeStatus.value)
+  if (activeMassAdoption.value !== null) {
+    result = result.filter((inv) => inv.mass_adoption === activeMassAdoption.value)
   }
 
   if (activeYear.value !== null) {
@@ -216,7 +213,7 @@ const hasActiveFilters = computed(() => {
   return (
     activeBranch.value !== null ||
     activeType.value !== null ||
-    activeStatus.value !== null ||
+    activeMassAdoption.value !== null ||
     activeYear.value !== null ||
     searchQuery.value.trim().length > 0
   )
@@ -245,7 +242,7 @@ const goToRandom = () => {
 const clearFilters = () => {
   activeBranch.value = null
   activeType.value = null
-  activeStatus.value = null
+  activeMassAdoption.value = null
   activeYear.value = null
   searchQuery.value = ''
   searchSuggestions.value = []

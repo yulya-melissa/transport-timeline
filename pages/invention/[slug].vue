@@ -8,25 +8,13 @@
           <div class="invention-meta">
             <span class="invention-era">{{ invention.era }}</span>
             <span class="invention-dot">·</span>
-            <span class="invention-status">{{ statusLabel }}</span>
+            <span class="invention-mass">{{ massLabel }}</span>
             <span class="invention-dot">·</span>
             <span>{{ invention.yearLabel }}</span>
           </div>
           <h1 class="invention-title">{{ invention.title }}</h1>
           <p class="invention-inventor">{{ invention.inventor }}</p>
         </header>
-
-        <div class="hero-media fade-up">
-          <a
-            :href="invention.image_hero"
-            target="_blank"
-            rel="noopener"
-            class="hero-link"
-            :aria-label="`Открыть изображение в полном размере: ${invention.title}`"
-          >
-            <img :src="invention.image_hero" :alt="invention.title" />
-          </a>
-        </div>
 
         <section class="content-section fade-up">
           <h2>История создания</h2>
@@ -134,15 +122,9 @@ const { getBySlug, getNeighbors } = useInventions()
 const invention = computed(() => getBySlug(route.params.slug))
 const neighbors = computed(() => getNeighbors(route.params.slug))
 
-const statusLabel = computed(() => {
-  const map = {
-    key: 'Ключевой вклад',
-    important: 'Важный вклад',
-    indirect: 'Косвенно связан с автомобильной историей',
-    contested: 'Исторически спорный объект',
-    project: 'Проектный/экспериментальный проект'
-  }
-  return invention.value ? map[invention.value.status] : ''
+const massLabel = computed(() => {
+  if (!invention.value) return ''
+  return invention.value.mass_adoption ? 'Введён в массовую эксплуатацию' : 'Не введён в массовую эксплуатацию'
 })
 
 const formattedHistory = computed(() => {
@@ -202,6 +184,15 @@ useScrollReveal()
   color: var(--gold);
 }
 
+.invention-mass {
+  display: inline-block;
+  background: rgba(180, 68, 60, 0.1);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 0.76rem;
+}
+
 .invention-title {
   color: var(--accent);
   margin-bottom: 6px;
@@ -210,23 +201,6 @@ useScrollReveal()
 .invention-inventor {
   font-size: 1.04rem;
   color: var(--text-secondary);
-}
-
-.hero-media {
-  max-width: 900px;
-  margin: 0 auto 40px;
-}
-
-.hero-link {
-  display: block;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow);
-}
-
-.hero-link img {
-  width: 100%;
-  object-fit: cover;
 }
 
 .content-section {
@@ -391,10 +365,6 @@ useScrollReveal()
 }
 
 @media (max-width: 768px) {
-  .hero-media {
-    margin-bottom: 26px;
-  }
-
   .invention-nav {
     grid-template-columns: 1fr;
   }

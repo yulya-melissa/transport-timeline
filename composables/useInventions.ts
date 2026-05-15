@@ -28,8 +28,7 @@ interface Invention {
   inventor: string
   type: string
   branch: 'mainline' | 'adjacent'
-  status: 'key' | 'important' | 'contested' | 'indirect' | 'project'
-  statusLabel: string
+  mass_adoption: boolean
   image_main: string
   image_hero: string
   hover_points: string[]
